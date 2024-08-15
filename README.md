@@ -1,4 +1,4 @@
-This is a fullstack (not so much actually) application that allows users to create, read, update, and delete todos. Frontend is built with HTMX, CSS and JS it is terrible, but it works. Backend is built with Go.
+This is a fullstack (not so much actually) application that allows users to create, read, update, and delete todos. Frontend is built with HTMX (with go template), CSS and JS it is terrible, but it works. Backend is built with Go.
 
 ### Quick Start
 ``` bash
