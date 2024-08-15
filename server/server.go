@@ -2,13 +2,10 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"github.com/srumut/todofullstack/storage"
 )
 
@@ -20,7 +17,7 @@ type Server struct {
 func NewServer(store storage.Storage) *Server {
 	return &Server{
 		store,
-		http.StripPrefix("/static/", http.FileServer(http.Dir("./public"))),
+		http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))),
 	}
 }
 
@@ -28,9 +25,15 @@ func (s *Server) initialize() *http.Server {
 	mux := mux.NewRouter()
 
 	mux.HandleFunc("/", Make(s.HandleIndexPage)).Methods("GET")
+
+	mux.HandleFunc("/register", Make(s.HandleRegisterPage)).Methods("GET")
+	mux.HandleFunc("/register", Make(s.HandleRegisterRequest)).Methods("POST")
+	mux.HandleFunc("/login", Make(s.HandleLoginPage)).Methods("GET")
+	mux.HandleFunc("/login", Make(s.HandleLoginRequest)).Methods("POST")
+
 	mux.HandleFunc("/todo/add", Make(s.HandleTodoAdd)).Methods("POST")
 	mux.HandleFunc("/todo/del/{id:[0-9]+}", Make(s.HandleTodoDel)).Methods("DELETE")
-	mux.PathPrefix("/static/").HandlerFunc(s.handlerForStatic)
+	mux.PathPrefix("/static/").HandlerFunc(s.HandleStaticFiles)
 
 	server := &http.Server{
 		Addr:    getAddr(),
@@ -51,15 +54,5 @@ func (s *Server) Start() error {
 }
 
 func getAddr() string {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading.env file")
-	}
 	return os.Getenv("LISTEN_ADDR")
-}
-
-func (s *Server) handlerForStatic(w http.ResponseWriter, r *http.Request) {
-	if filepath.Ext(r.URL.Path) == ".css" {
-		w.Header().Set("content-type", "text/css")
-	}
-	s.fs.ServeHTTP(w, r)
 }

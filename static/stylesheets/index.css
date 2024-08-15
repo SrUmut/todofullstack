@@ -1,0 +1,27 @@
+body {
+    background-color: Canvas;
+    color: CanvasText;
+    color-scheme: light dark;
+
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+svg {
+    height: 2em;
+    padding-right: 10px;
+}
+
+#form {
+    display: flex;
+}
+
+#description-container {
+    margin-left: 1em ;
+    width: 40%;
+    display: flex;
+}
+
+#description {
+    flex-grow: 1;
+    margin: 0 1em;
+}

@@ -2,6 +2,7 @@ package storage
 
 type todo struct {
 	ID          int
+	TodoID      int
 	Title       string
 	Description string
 }
