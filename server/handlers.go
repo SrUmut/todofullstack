@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -168,7 +167,7 @@ func (s *Server) HandleRegisterRequest(w http.ResponseWriter, r *http.Request) e
 		return nil
 	}
 
-	w.Header().Set("HX-Redirect", "/login")
+	s.redirect(w, r, "/login", http.StatusSeeOther)
 
 	return nil
 }
@@ -206,10 +205,10 @@ func (s *Server) HandleLoginRequest(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
-	expeDur := time.Hour
+	expTime := time.Now().Add(time.Minute)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": username,
-		"exp": time.Now().Add(expeDur).Unix(),
+		"exp": expTime.Unix(),
 	})
 
 	tokenStr, err := token.SignedString([]byte(os.Getenv("SECRET")))
@@ -217,8 +216,17 @@ func (s *Server) HandleLoginRequest(w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	w.Header().Set("jwt-token", tokenStr)
-	w.Header().Set("jwt-exp", strconv.FormatInt(expeDur.Milliseconds(), 10))
+	jwtcookie := &http.Cookie{
+		Name:     "jwt_token",
+		Value:    tokenStr,
+		Expires:  expTime,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	http.SetCookie(w, jwtcookie)
+	s.redirect(w, r, "/", http.StatusSeeOther)
 
 	return nil
 }
@@ -226,27 +234,27 @@ func (s *Server) HandleLoginRequest(w http.ResponseWriter, r *http.Request) erro
 func (s *Server) handleJWT(w http.ResponseWriter, r *http.Request) (jwt.MapClaims, error) {
 	cookie, err := r.Cookie("jwt_token")
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		s.redirect(w, r, "/login", http.StatusSeeOther)
 		return nil, err
 	}
 	tokenString := strings.TrimPrefix(cookie.String(), "jwt_token=")
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			s.redirect(w, r, "/login", http.StatusSeeOther)
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
 		return []byte(os.Getenv("SECRET")), nil
 	})
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		s.redirect(w, r, "/login", http.StatusSeeOther)
 		return nil, err
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || time.Now().Compare(time.Unix(int64(claims["exp"].(float64)), 0)) >= 0 {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		s.redirect(w, r, "/login", http.StatusSeeOther)
 		return nil, err
 	}
 
@@ -258,4 +266,12 @@ func (s *Server) wrongCredentials(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte("wrong username or password"))
 	log.Printf("HandleLoginRequest | error getting password | err: %s", err)
+}
+
+func (s *Server) redirect(w http.ResponseWriter, r *http.Request, path string, code int) {
+	if r.URL.Path == "/" && r.Method == http.MethodGet {
+		http.Redirect(w, r, path, code)
+	} else {
+		w.Header().Set("HX-Redirect", path)
+	}
 }

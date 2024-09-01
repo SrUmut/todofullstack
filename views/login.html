@@ -12,7 +12,7 @@
 </head>
 <body>
     <div id="menu">
-        <form hx-post="/login" id="form" hx-swap="none" hx-on::before-request="resetForm(this)" hx-on::response-error="displayError(event)" hx-on::after-request="responseHeaders(event);">
+        <form hx-post="/login" id="form" hx-swap="none" hx-on::before-request="resetForm(this)" hx-on::response-error="displayError(event)">
             <div id="error"></div>
             <input type="text" id="username" name="username" placeholder="Username">
             <input type="password" id="password" name="password" placeholder="Password">
