@@ -1,3 +1,4 @@
+/*
 body {
     background-color: Canvas;
     color: CanvasText;
@@ -24,4 +25,11 @@ svg {
 #description {
     flex-grow: 1;
     margin: 0 1em;
+}
+*/
+
+
+.hover-warning:hover {
+    background-color: #6c1f26;
+    color: white;
 }

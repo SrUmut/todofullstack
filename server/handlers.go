@@ -205,7 +205,7 @@ func (s *Server) HandleLoginRequest(w http.ResponseWriter, r *http.Request) erro
 		return nil
 	}
 
-	expTime := time.Now().Add(time.Minute)
+	expTime := time.Now().Add(time.Hour)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": username,
 		"exp": expTime.Unix(),

@@ -2,8 +2,8 @@ function resetForm(target) {
     target.reset();
 }
 
-
 function displayError(event) {
-    console.log(event);
-    document.querySelector("#error").textContent = event.detail.xhr.response;
+    const errorDiv = document.querySelector("#error");
+    errorDiv.textContent = event.detail.xhr.response;
+    errorDiv.classList.remove("d-none");
 }
